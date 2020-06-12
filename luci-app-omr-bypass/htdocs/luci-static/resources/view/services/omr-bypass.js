@@ -162,11 +162,11 @@ return L.view.extend({
 		o.rmempty = false;
 		o.load = function(section_id) {
 			return Promise.all([
-				fs.lines('/proc/net/xt_ndpi/proto'),
-				fs.lines('/proc/net/xt_ndpi/host_proto')
-			]).then(L.bind(function(linesi) {
-				var proto = linesi[0],
-				    host = linesi[1],
+				fs.read_direct('/proc/net/xt_ndpi/proto'),
+				fs.read_direct('/proc/net/xt_ndpi/host_proto')
+			]).then(L.bind(function(readsi) {
+				var proto = readsi[0].split("\n"),
+				    host = readsi[1].split("\n"),
 				    name = [];
 				for (var i = 0; i < proto.length; i++) {
 					var m = proto[i].split(/\s+/);
@@ -178,7 +178,9 @@ return L.view.extend({
 					if (m && m[0] != "#Proto")
 					  name.push(m[0]);
 				}
-				name = Array.from(new Set(name)).sort();
+				name = Array.from(new Set(name)).sort(function (a, b) { 
+					return a.toLowerCase().localeCompare(b.toLowerCase());
+				});
 				for (var i = 0; i < name.length; i++) {
 					this.value(name[i]);
 				}
